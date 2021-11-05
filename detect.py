@@ -37,6 +37,7 @@ import argparse
 import cv2
 import array as arr
 from PIL import Image
+from pathlib import Path
 
 # [START vision_face_detection]
 def detect_faces(path):
@@ -910,26 +911,41 @@ def localize_objects(path):
         print('\n{} (confidence: {})'.format(object_.name, object_.score))
         ##myFile = open(object_.name+str(number)+".txt", "w")
         print('Normalized bounding polygon vertices: ')
-        i = 0;
-        i=i+1
-        c = 0
-        coordinates = arr.array('i',[0,0,0,0])
+        #i = 0;
+        #i=i+1
+        #c = 0
+        coordinates = arr.array('f',[1.0,1.0,0.0,0.0])
         for vertex in object_.bounding_poly.normalized_vertices:
             print(' - ({}, {})'.format(vertex.x, vertex.y))
-            if i % 2:
+            #if i % 2:
                 ##myFile.write('{} {}\n'.format(int(vertex.x*w), int(vertex.y*h)))
-                coordinates[c] = int(vertex.x*w)
+            if vertex.x < coordinates[0]:
+               coordinates[0] = vertex.x
+            elif vertex.y < coordinates[1]:
+                coordinates[1] = vertex.y
+            elif coordinates[2] < vertex.x:
+                coordinates[2] = vertex.x
+            elif coordinates[3] < vertex.y:
+                coordinates[3] = vertex.y
+                #coordinates[c] = int(vertex.x*w)
                 ##print(coordinates[c])
-                coordinates[c+1] = int(vertex.y*h)
+                #coordinates[c+1] = int(vertex.y*h)
                 ##print(coordinates[c+1])
-                c = c+2 
-            i=i+1
-        image = Image.open(path)
-        ##im.crop((coordinates[0],coordinates[1], coordinates[2], coordinates[3]))
-        box = (coordinates[0],coordinates[1],coordinates[2],coordinates[3])
-        croppedimage = image.crop(box)
-        ##croppedimage.show()
-        croppedimage.save(object_.name+".jpg")
+                #c = c+2 
+            #i=i+1
+        if object_.score > 0.7: 
+            image = Image.open(path)
+            ##im.crop((coordinates[0],coordinates[1], coordinates[2], coordinates[3]))
+            box = (coordinates[0]*w,coordinates[1]*h,coordinates[2]*w,coordinates[3]*h)
+            print(str(coordinates[0]) + " " + str(coordinates[1]) + " "+ str(coordinates[2]) + " " + str(coordinates[3]));
+            croppedimage = image.crop(box)
+            croppedimage.show()
+            count = 1
+            path = Path("pics/"+object_.name+str(count)+".jpg")
+            while path.is_file():
+                count = count+1
+                path = Path("pics/"+object_.name+str(count)+".jpg")
+            croppedimage.save(path)
 
         ##myFile.close()
 # [END vision_localize_objects]
